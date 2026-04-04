@@ -1,0 +1,107 @@
+name: RdpByDucThengTechDz-Admin-SuperOptimized-24h-Video120FPS-SuperSmooth-Eco
+
+on:
+  workflow_dispatch:
+    inputs:
+      ngrok_download_url:
+        description: 'Paste ngrok Windows (amd64) ZIP direct download link'
+        required: true
+        default: 'https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip'
+      ngrok_region:
+        description: 'Chọn region ngrok (ap = Singapore - khuyến nghị mạnh, auto, jp, in...)'
+        required: false
+        default: 'ap'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 1450   # 24 tiếng + 10 phút buffer
+
+    steps:
+      - name: Download and Extract ngrok
+        run: |
+          Invoke-WebRequest -Uri "${{ github.event.inputs.ngrok_download_url }}" -OutFile ngrok.zip
+          Expand-Archive ngrok.zip -DestinationPath ngrok
+
+      - name: Authenticate ngrok
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+
+      - name: Enable RDP + Create Admin User
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          New-LocalUser "DucthengTechDz" -Password (ConvertTo-SecureString "W1nd0ws-P4ssw0rd-2025!" -AsPlainText -Force) -FullName "DucthengTechDz"
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "DucthengTechDz"
+          Add-LocalGroupMember -Group "Administrators" -Member "DucthengTechDz"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+      - name: Siêu Tối Ưu RDP cho XEM VIDEO 120 FPS SIÊU MƯỢT + Music + Mạng YẾU + Eco Mode
+        run: |
+          Write-Host "Áp dụng SIÊU TỐI ƯU VIDEO MAX 120 FPS - Siêu mượt không giật lag + Nhạc không rè + Eco Mode..."
+
+          # === VIDEO MAX 120 FPS (YouTube / Netflix / Phim / Live Stream mượt như native) ===
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "fEnableVirtualizedGraphics" -Value 1 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "AVCHardwareEncodePreferred" -Value 1 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "AVC444ModePreferred" -Value 1 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "MinFrameRate" -Value 120 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "MaxCompression" -Value 0 -Type DWord -Force
+
+          # Tắt LowBandwidth mode để chất lượng video cao nhất (120 FPS full)
+          Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "fLowBandwidth" -Value 0 -Type DWord -Force
+
+          # === Giảm lag hình nền, animation (tiết kiệm băng thông) ===
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "fDisableWallpaper" -Value 1 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "fDisableFullWindowDrag" -Value 1 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "fDisableMenuAnims" -Value 1 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "fDisableThemes" -Value 1 -Type DWord -Force
+
+          # === Ưu tiên AUDIO & MULTIMEDIA (nhạc Foobar2000/AIMP cực mượt) ===
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile' -Name "SystemResponsiveness" -Value 0 -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile' -Name "NetworkThrottlingIndex" -Value 0xffffffff -Type DWord -Force
+          Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "fDisableAudioCapture" -Value 0 -Type DWord -Force
+          
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "AudioQualityMode" -Value 2 -Type DWord -Force
+          New-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio' -Force | Out-Null
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio' -Name "Scheduling Category" -Value "High" -Type String -Force
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Audio' -Name "Background Priority" -Value 1 -Type DWord -Force
+
+          # Tăng buffer RDP chịu mạng yếu
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services' -Name "MaxOutputBufferSize" -Value 16384 -Type DWord -Force
+
+          # === ECO MODE ===
+          powercfg /setactive a1841308-3541-4fab-bc81-f71556f20b4a
+          powercfg /change monitor-timeout-ac 0
+          powercfg /change standby-timeout-ac 0
+          powercfg /change disk-timeout-ac 0
+          powercfg /change hibernate-timeout-ac 0
+
+          Write-Host "Đã áp dụng SIÊU TỐI ƯU VIDEO MAX 120 FPS: Xem video siêu mượt cực mạnh - Không giật lag + Nhạc không rè"
+
+      - name: Start RDP Tunnel (Singapore Optimized - Tự động tắt sau 24 tiếng)
+        run: |
+          Write-Host "======================================================================"
+          Write-Host "         RDP XEM VIDEO MAX 120 FPS SIÊU MƯỢT - 24 TIẾNG (DucthengTechDz)"
+          Write-Host "======================================================================"
+          Write-Host "Username : DucthengTechDz"
+          Write-Host "Password : W1nd0ws-P4ssw0rd-2025!"
+          Write-Host "Region   : ${{ github.event.inputs.ngrok_region }} (Singapore = ap)"
+          Write-Host "Thời gian: CHẠY ĐÚNG 24 TIẾNG (1 NGÀY) rồi TỰ ĐỘNG TẮT"
+          Write-Host "✅ Xem YouTube / Netflix / Phim / Live Stream MAX 120 FPS - SIÊU MƯỢT"
+          Write-Host "✅ Không giật lag + Nhạc Foobar2000/AIMP không rè"
+          Write-Host "✅ Mạng điện thoại yếu vẫn ổn + Eco Mode tiết kiệm"
+          Write-Host "======================================================================"
+          Write-Host "Kết nối RDP → Mở YouTube / Netflix / Video 4K thoải mái!"
+
+          # Khởi động ngrok và tự động tắt sau đúng 24 tiếng
+          $ngrokProcess = Start-Process -FilePath ".\ngrok\ngrok.exe" `
+            -ArgumentList "tcp 3389 --region=${{ github.event.inputs.ngrok_region }} --log=stdout" `
+            -NoNewWindow -PassThru
+
+          Write-Host "Ngrok RDP đã khởi động. Sẽ tự động tắt sau đúng 24 tiếng (86400 giây)..."
+          Start-Sleep -Seconds 86400
+
+          # Tắt sạch
+          Stop-Process -Id $ngrokProcess.Id -Force -ErrorAction SilentlyContinue
+          Write-Host "ĐÃ TỰ ĐỘNG TẮT sau đúng 1 NGÀY - Eco Mode hoàn tất!”
